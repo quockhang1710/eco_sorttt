@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECO SORT - Smart Recycling</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#eff8f1;
+  color:#183b2b;
+}
+header{
+  background:#137b50;
+  color:white;
+  padding:20px 6%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.logo{font-size:27px;font-weight:900;letter-spacing:1px}
+header button{background:white;color:#137b50}
+button{
+  border:0;border-radius:12px;padding:12px 18px;
+  background:#168653;color:white;font-weight:bold;
+  cursor:pointer;font-size:15px;
+}
+button:hover{filter:brightness(.93);transform:translateY(-2px)}
+main{max-width:1050px;margin:30px auto;padding:0 16px}
+.panel{
+  background:white;border-radius:20px;padding:24px;
+  margin-bottom:22px;box-shadow:0 5px 20px #174b3010;
+}
+h1,h2{text-align:center}
+.subtitle{text-align:center;color:#648071}
+#auth{max-width:420px;margin:55px auto}
+input{
+  width:100%;padding:13px;margin:8px 0 15px;
+  border:1px solid #c9dfd0;border-radius:10px;font-size:16px;
+}
+.hidden{display:none!important}
+.stats{
+  display:flex;justify-content:center;gap:15px;flex-wrap:wrap;
+}
+.stat{
+  background:#e5f6e9;padding:15px 25px;border-radius:14px;
+  text-align:center;min-width:130px;
+}
+.stat strong{display:block;font-size:25px;color:#168653}
+.upload-area{
+  border:2px dashed #9ac9a9;border-radius:16px;
+  padding:25px;text-align:center;background:#f8fcf8;
+}
+#preview{
+  display:block;max-width:100%;max-height:300px;
+  margin:18px auto;border-radius:14px;
+}
+.status{text-align:center;font-weight:bold;margin:15px 0}
+.bins{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;margin-top:25px;
+}
+.bin-card{
+  text-align:center;background:#f5faf6;border-radius:18px;
+  padding:18px 8px;border:2px solid transparent;
+}
+.bin-card:hover{border-color:#8ac49a}
+.bin{
+  width:90px;height:100px;margin:12px auto 18px;
+  position:relative;border-radius:9px 9px 17px 17px;
+  animation:bounce 2.5s infinite ease-in-out;
+  box-shadow:inset -8px 0 #00000012,0 8px 12px #00000015;
+}
+.bin:before{
+  content:"";position:absolute;top:-12px;left:-7px;
+  width:104px;height:14px;border-radius:7px;
+  background:inherit;filter:brightness(.85);
+}
+.bin:after{
+  content:"";position:absolute;top:-23px;left:31px;
+  width:28px;height:7px;border:4px solid #444;
+  border-bottom:0;border-radius:8px 8px 0 0;
+}
+.bin .symbol{
+  position:absolute;top:27px;left:0;right:0;
+  color:white;font-size:35px;font-weight:bold;
+}
+.blue{background:#258bd5}
+.brown{background:#98603a}
+.gray{background:#727b83}
+@keyframes bounce{
+  0%,100%{transform:translateY(0) rotate(0)}
+  50%{transform:translateY(-7px) rotate(2deg)}
+}
+.bin-card:nth-child(2) .bin{animation-delay:.3s}
+.bin-card:nth-child(3) .bin{animation-delay:.6s}
+.bin-card button{width:100%;padding:10px 5px}
+.result{
+  text-align:center;font-size:18px;font-weight:bold;
+  padding:15px;border-radius:12px;margin-top:18px;
+}
+.success{background:#dff6e5;color:#126b39}
+.error{background:#fff0df;color:#9b4c12}
+.rewards{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+.reward{
+  background:#f4faf5;padding:18px;text-align:center;
+  border-radius:14px;
+}
+.reward .emoji{font-size:35px}
+footer{text-align:center;color:#789083;padding:25px}
+@media(max-width:650px){
+  .bins{grid-template-columns:1fr}
+  .bin-card{padding:18px}
+  .rewards{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">♻ ECO SORT</div>
+  <div>
+    <span id="userLabel">Welcome!</span>
+    <button id="logoutBtn" class="hidden" onclick="logout()">Log out</button>
+  </div>
+</header>
+
+<section id="auth" class="panel">
+  <h1>Welcome to ECO SORT</h1>
+  <p class="subtitle">Learn to sort waste and protect our planet.</p>
+  <input id="username" placeholder="Your username">
+  <input id="password" type="password" placeholder="Your password">
+  <button style="width:100%" onclick="login()">Sign in / Create account</button>
+  <p class="subtitle">Demo account: stored only in this browser.</p>
+  <p id="authMessage" class="status"></p>
+</section>
+
+<main id="app" class="hidden">
+  <section class="panel">
+    <h1>🌍 Welcome to ECO SORT!</h1>
+    <p class="subtitle">Take a photo of waste and choose the correct bin.</p>
+    <div class="stats">
+      <div class="stat">⭐ Points<strong id="points">0</strong></div>
+      <div class="stat">🏆 Level<strong id="level">1</strong></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>📸 Scan Your Waste</h2>
+    <div class="upload-area">
+      <p>Take a photo or upload an image of waste.</p>
+      <input type="file" id="photo" accept="image/*" capture="environment">
+      <img id="preview" class="hidden" alt="Waste preview">
+      <button id="scanBtn" onclick="scanWaste()">Analyze Photo</button>
+      <p id="aiStatus" class="status">AI is waiting for an image.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>🗑️ Choose the Correct Bin</h2>
+    <p class="subtitle">Select the bin that matches the waste in your photo.</p>
+
+    <div class="bins">
+      <div class="bin-card">
+        <div class="bin blue"><span class="symbol">♻</span></div>
+        <h3>Blue Bin</h3>
+        <p>Recyclable Waste</p>
+        <p>Paper, plastic bottles, cans</p>
+        <button onclick="chooseBin('recyclable')">Choose Blue</button>
+      </div>
+
+      <div class="bin-card">
+        <div class="bin brown"><span class="symbol">🍃</span></div>
+        <h3>Brown Bin</h3>
+        <p>Organic Waste</p>
+        <p>Food scraps, leaves</p>
+        <button onclick="chooseBin('organic')">Choose Brown</button>
+      </div>
+
+      <div class="bin-card">
+        <div class="bin gray"><span class="symbol">🗑</span></div>
+        <h3>Gray Bin</h3>
+        <p>General Waste</p>
+        <p>Non-recyclable waste</p>
+        <button onclick="chooseBin('general')">Choose Gray</button>
+      </div>
+      </div>
+
+    <div id="result" class="result hidden"></div>
+    <button id="retryBtn" class="hidden" onclick="resetRound()">Try Another Photo</button>
+  </section>
+
+  <section class="panel">
+    <h2>🎁 Virtual Rewards</h2>
+    <div class="rewards">
+      <div class="reward">
+        <div class="emoji">🌱</div>
+        <h3>Green Starter</h3>
+        <p>10 points</p>
+        <button onclick="redeem(10,'Green Starter')">Redeem</button>
+      </div>
+      <div class="reward">
+        <div class="emoji">🌳</div>
+        <h3>Tree Guardian</h3>
+        <p>30 points</p>
+        <button onclick="redeem(30,'Tree Guardian')">Redeem</button>
+      </div>
+      <div class="reward">
+        <div class="emoji">🌎</div>
+        <h3>Planet Hero</h3>
+        <p>50 points</p>
+        <button onclick="redeem(50,'Planet Hero')">Redeem</button>
+      </div>
+    </div>
+    <p id="rewardMessage" class="status"></p>
+  </section>
+</main>
+
+<footer>© 2026 ECO SORT — Small actions, cleaner planet 🌿</footer>
+
+<script type="module">
+import { pipeline } from
+'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+let classifier = null;
+let currentUser = null;
+let currentAnswer = null;
+let answered = false;
+let points = 0;
+
+const $ = id => document.getElementById(id);
+
+function getAccounts(){
+  return JSON.parse(localStorage.getItem('ecoAccounts') || '{}');
+}
+function saveAccounts(data){
+  localStorage.setItem('ecoAccounts',JSON.stringify(data));
+}
+function userData(){
+  const accounts=getAccounts();
+  return accounts[currentUser];
+}
+function updateStats(){
+  const data=userData();
+  points=data.points || 0;
+  $('points').textContent=points;
+  $('level').textContent=Math.floor(points/50)+1;
+}
+
+window.login = function(){
+  const name=$('username').value.trim();
+  const pass=$('password').value;
+  if(!name || !pass){
+    $('authMessage').textContent='Enter a username and password.';
+    return;
+  }
+  const accounts=getAccounts();
+  if(accounts[name] && accounts[name].password!==pass){
+    $('authMessage').textContent='Incorrect password.';
+    return;
+  }
+  if(!accounts[name]){
+    accounts[name]={password:pass,points:0,rewards:[]};
+    saveAccounts(accounts);
+  }
+  currentUser=name;
+  $('auth').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('logoutBtn').classList.remove('hidden');
+  $('userLabel').textContent='Hello, '+name;
+  updateStats();
+};
+
+window.logout=function(){
+  currentUser=null;
+  $('app').classList.add('hidden');
+  $('auth').classList.remove('hidden');
+  $('logoutBtn').classList.add('hidden');
+  $('userLabel').textContent='Welcome!';
+};
+
+$('photo').addEventListener('change',()=>{
+  const file=$('photo').files[0];
+  if(!file)return;
+  $('preview').src=URL.createObjectURL(file);
+  $('preview').classList.remove('hidden');
+  $('aiStatus').textContent='Image ready. Click Analyze Photo.';
+  $('result').classList.add('hidden');
+  $('retryBtn').classList.add('hidden');
+  currentAnswer=null;
+  answered=false;
+});
+  window.scanWaste=async function(){
+  if(!$('photo').files[0]){
+    $('aiStatus').textContent='Please upload a photo first.';
+    return;
+  }
+  $('scanBtn').disabled=true;
+  $('aiStatus').textContent='Loading AI model... This may take a while the first time.';
+  try{
+    if(!classifier){
+      classifier=await pipeline(
+        'zero-shot-image-classification',
+        'Xenova/clip-vit-base-patch32'
+      );
+    }
+    $('aiStatus').textContent='AI is analyzing your photo...';
+    const labels=[
+      'recyclable waste such as a plastic bottle, paper or metal can',
+      'organic waste such as food scraps, fruit peels or leaves',
+      'general non-recyclable household waste'
+    ];
+    const predictions=await classifier($('preview'),labels);
+    const label=predictions[0].label.toLowerCase();
+
+    if(label.includes('recyclable')) currentAnswer='recyclable';
+    else if(label.includes('organic')) currentAnswer='organic';
+    else currentAnswer='general';
+
+    $('aiStatus').textContent=
+      'AI suggestion: '+currentAnswer.toUpperCase()
